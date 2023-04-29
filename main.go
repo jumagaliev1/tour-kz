@@ -16,7 +16,7 @@ import (
 // @contact.url @AZhumagaliyev
 // @contact.email alibi.zhumagaliyev@gmail.com
 
-// @host localhost:8080
+// @host 161.35.212.45:8080
 // @BasePath /api/v1
 
 // @securityDefinitions.apikey ApiKeyAuth

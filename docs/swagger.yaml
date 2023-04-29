@@ -94,7 +94,7 @@ definitions:
       referral_code:
         type: string
     type: object
-host: localhost:8080
+host: 161.35.212.45:8080
 info:
   contact:
     email: alibi.zhumagaliyev@gmail.com

@@ -9,7 +9,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "161.35.212.45:8080",
     "basePath": "/api/v1",
     "paths": {
         "/add_balance": {
