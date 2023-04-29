@@ -1,0 +1,377 @@
+basePath: /api/v1
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  model.AddBalanceReq:
+    properties:
+      amount:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  model.AuthUser:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  model.Payment:
+    properties:
+      amount:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+      user_id:
+        type: integer
+    type: object
+  model.TypeCreateReq:
+    properties:
+      amount:
+        type: integer
+      type:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  model.User:
+    properties:
+      bank_uuid:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      phone:
+        type: string
+      referral_code:
+        type: string
+      role:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.UserCreateReq:
+    properties:
+      bank_uuid:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      referral_code:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: alibi.zhumagaliyev@gmail.com
+    name: Alibi Zhumagaliyev
+    url: '@AZhumagaliyev'
+  title: Tour-KZ API
+  version: "1.0"
+paths:
+  /add_balance:
+    post:
+      consumes:
+      - application/json
+      description: Add balance for User
+      operationId: AddBalance
+      parameters:
+      - description: Input body
+        in: body
+        name: rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddBalanceReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Add balance for User
+      tags:
+      - account
+  /my_balance:
+    get:
+      consumes:
+      - application/json
+      description: Get authorized user balance
+      operationId: MyBalance
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      security:
+      - ApiKeyAuth: []
+      summary: Get user balance
+      tags:
+      - account
+  /my_referrals:
+    get:
+      consumes:
+      - application/json
+      description: Get Referrals
+      operationId: GetUReferral
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+      security:
+      - ApiKeyAuth: []
+      summary: Get Referrals
+      tags:
+      - referral
+  /payment/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cancel Payment
+      operationId: CancelPayment
+      parameters:
+      - description: input
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Payment'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel Payment
+      tags:
+      - payment
+    patch:
+      consumes:
+      - application/json
+      description: GApprovePayment
+      operationId: ApprovePayment
+      parameters:
+      - description: input
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Payment'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Approve Payment
+      tags:
+      - payment
+  /payment/income:
+    post:
+      consumes:
+      - application/json
+      description: CreateIncome Payment for checking
+      operationId: CreateIncomePayment
+      parameters:
+      - description: Input body
+        in: body
+        name: rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.TypeCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: integer
+      security:
+      - ApiKeyAuth: []
+      summary: CreateIncome Payment
+      tags:
+      - payment
+  /payment/outcome:
+    post:
+      consumes:
+      - application/json
+      description: CreateOutcome Payment for checking
+      operationId: CreateOutcomePayment
+      parameters:
+      - description: Input body
+        in: body
+        name: rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.TypeCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: integer
+      security:
+      - ApiKeyAuth: []
+      summary: CreateOutcome Payment
+      tags:
+      - payment
+  /payments:
+    get:
+      consumes:
+      - application/json
+      description: Get Payments with sort
+      operationId: GetPayments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Payment'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get Payments
+      tags:
+      - payment
+  /tokens/authentication:
+    post:
+      consumes:
+      - application/json
+      description: Auth get JWT token
+      operationId: AuthUser
+      parameters:
+      - description: Входящие данные
+        in: body
+        name: rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.AuthUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Auth get JWT token
+      tags:
+      - user
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Get User
+      operationId: GetUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+      security:
+      - ApiKeyAuth: []
+      summary: Get User
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Создание пользователя
+      operationId: CreateUser
+      parameters:
+      - description: Input body
+        in: body
+        name: rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+      summary: Создание пользователя
+      tags:
+      - user
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get All User
+      operationId: GetAllUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.User'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get All User
+      tags:
+      - user
+securityDefinitions:
+  ApiKeyAuth:
+    description: OAuth protects our entity endpoints
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
