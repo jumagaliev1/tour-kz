@@ -127,6 +127,32 @@ func (h *PaymentHandler) ApprovePayment(c echo.Context) error {
 		return c.JSON(http.StatusServiceUnavailable, err)
 	}
 
+	account, err := h.service.Account.GetByUser(c.Request().Context(), payment.UserID)
+	if err != nil {
+		return err
+	}
+
+	h.logger.Logger(c.Request().Context()).Info("payment:", payment.Amount, "balance:", account.Balance)
+
+	if payment.Type == model.TypeIncome {
+		err = h.service.Account.UpdateLevels(c.Request().Context(), payment.UserID, payment.Amount)
+		if err != nil {
+			return err
+		}
+	} else if payment.Type == model.TypeOutcome {
+		if account.Balance-payment.Amount < 50000 {
+			return c.JSON(http.StatusServiceUnavailable, "not enough money")
+		}
+		account.Balance = account.Balance - payment.Amount
+
+		err = h.service.Account.Update(c.Request().Context(), *account)
+		if err != nil {
+			return err
+		}
+	}
+
+	h.logger.Logger(c.Request().Context()).Info("After:", account.Balance)
+
 	payment.Status = model.StatusComplete
 
 	err = h.service.Payment.Update(c.Request().Context(), *payment)
