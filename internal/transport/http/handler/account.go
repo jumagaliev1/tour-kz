@@ -32,12 +32,14 @@ func (h *AccountHandler) AddBalance(c echo.Context) error {
 	var body model.AddBalanceReq
 
 	if err := c.Bind(&body); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
 	h.logger.Logger(c.Request().Context()).Info(body)
+
 	err := h.service.Account.UpdateLevels(c.Request().Context(), body.UserID, body.Amount)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "Succesfully")
@@ -56,12 +58,12 @@ func (h *AccountHandler) AddBalance(c echo.Context) error {
 func (h *AccountHandler) MyBalance(c echo.Context) error {
 	user, err := h.service.User.GetUserFromRequest(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	account, err := h.service.Account.GetByUser(c.Request().Context(), user.ID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]int{"my_balance": account.Balance})

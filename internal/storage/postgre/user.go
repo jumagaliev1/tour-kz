@@ -19,8 +19,11 @@ func NewUserRepository(DB *gorm.DB, logger logger.RequestLogger) *UserRepository
 }
 
 func (r *UserRepository) Create(ctx context.Context, user model.User) (*model.User, error) {
+	tx := r.DB.Begin()
+
 	if err := r.DB.WithContext(ctx).Create(&user).Error; err != nil {
 		r.logger.Logger(ctx).Error(err)
+		tx.Rollback()
 		switch {
 		case model.IsDuplicateError(err):
 			return nil, model.ErrDuplicateEmail
@@ -28,6 +31,20 @@ func (r *UserRepository) Create(ctx context.Context, user model.User) (*model.Us
 			return nil, err
 		}
 	}
+
+	account := &model.Account{
+		UserID:  user.ID,
+		User:    user,
+		Balance: 0,
+	}
+
+	if err := r.DB.WithContext(ctx).Create(&account).Error; err != nil {
+		r.logger.Logger(ctx).Error(err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
 
 	return &user, nil
 }
@@ -93,7 +110,12 @@ func (r *UserRepository) GetByReferralCode(ctx context.Context, referralCode str
 
 	if err := r.DB.WithContext(ctx).Where("referral_code = ?", referralCode).First(&user).Error; err != nil {
 		r.logger.Logger(ctx).Error(err)
-		return nil, err
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, errors.New("invalid referral code")
+		default:
+			return nil, err
+		}
 	}
 
 	return &user, nil

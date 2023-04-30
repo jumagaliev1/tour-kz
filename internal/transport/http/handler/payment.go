@@ -32,12 +32,12 @@ func NewPaymentHandler(service *service.Manager, logger logger.RequestLogger) *P
 func (h *PaymentHandler) CreateIncome(c echo.Context) error {
 	var body model.TypeCreateReq
 	if err := c.Bind(&body); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	user, err := h.service.User.GetUserFromRequest(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	body.UserID = user.ID
@@ -45,7 +45,7 @@ func (h *PaymentHandler) CreateIncome(c echo.Context) error {
 
 	id, err := h.service.Payment.Create(c.Request().Context(), body.ToPayment())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, id)
@@ -65,12 +65,12 @@ func (h *PaymentHandler) CreateIncome(c echo.Context) error {
 func (h *PaymentHandler) CreateOutcome(c echo.Context) error {
 	var body model.TypeCreateReq
 	if err := c.Bind(&body); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	user, err := h.service.User.GetUserFromRequest(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	body.UserID = user.ID
@@ -78,7 +78,7 @@ func (h *PaymentHandler) CreateOutcome(c echo.Context) error {
 
 	id, err := h.service.Payment.Create(c.Request().Context(), body.ToPayment())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, id)
@@ -97,7 +97,7 @@ func (h *PaymentHandler) CreateOutcome(c echo.Context) error {
 func (h *PaymentHandler) GetPayments(c echo.Context) error {
 	resp, err := h.service.Payment.GetPayments(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusNoContent, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, resp)
@@ -119,45 +119,41 @@ func (h *PaymentHandler) ApprovePayment(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return c.JSON(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	ID = uint(id)
 	payment, err := h.service.Payment.GetByID(c.Request().Context(), ID)
 	if err != nil {
-		return c.JSON(http.StatusServiceUnavailable, err)
+		return echo.NewHTTPError(http.StatusServiceUnavailable, err.Error())
 	}
 
 	account, err := h.service.Account.GetByUser(c.Request().Context(), payment.UserID)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
-
-	h.logger.Logger(c.Request().Context()).Info("payment:", payment.Amount, "balance:", account.Balance)
 
 	if payment.Type == model.TypeIncome {
 		err = h.service.Account.UpdateLevels(c.Request().Context(), payment.UserID, payment.Amount)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	} else if payment.Type == model.TypeOutcome {
 		if account.Balance-payment.Amount < 50000 {
-			return c.JSON(http.StatusServiceUnavailable, "not enough money")
+			return echo.NewHTTPError(http.StatusServiceUnavailable, "not enough money")
 		}
 		account.Balance = account.Balance - payment.Amount
 
 		err = h.service.Account.Update(c.Request().Context(), *account)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
-
-	h.logger.Logger(c.Request().Context()).Info("After:", account.Balance)
 
 	payment.Status = model.StatusComplete
 
 	err = h.service.Payment.Update(c.Request().Context(), *payment)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, payment)
@@ -179,19 +175,19 @@ func (h *PaymentHandler) CancelPayment(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return c.JSON(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	ID = uint(id)
 	payment, err := h.service.Payment.GetByID(c.Request().Context(), ID)
 	if err != nil {
-		return c.JSON(http.StatusServiceUnavailable, err)
+		return echo.NewHTTPError(http.StatusServiceUnavailable, err.Error())
 	}
 
 	payment.Status = model.StatusCancel
 
 	err = h.service.Payment.Update(c.Request().Context(), *payment)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, payment)

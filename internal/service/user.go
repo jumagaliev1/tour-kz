@@ -33,6 +33,7 @@ func (s *UserService) Create(ctx context.Context, input model.UserCreateReq) (*m
 		s.logger.Logger(ctx).Error(err)
 		return nil, err
 	}
+
 	var parent *model.User
 	if input.ReferralCode != "" {
 		parent, err = s.repo.User.GetByReferralCode(ctx, input.ReferralCode)
@@ -52,11 +53,6 @@ func (s *UserService) Create(ctx context.Context, input model.UserCreateReq) (*m
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	_, err = s.repo.Account.Create(ctx, model.Account{UserID: u.ID})
-	if err != nil {
-		return nil, err
 	}
 
 	return u, nil
@@ -88,7 +84,6 @@ func (s *UserService) HashPassword(password string) (string, error) {
 
 func (s *UserService) Auth(ctx context.Context, user model.AuthUser) error {
 	userFromDB, userErr := s.repo.User.GetByEmail(ctx, user.Email)
-	s.logger.Logger(ctx).Info(userFromDB)
 	if userErr != nil {
 		s.logger.Logger(ctx).Error(userErr)
 		return userErr
