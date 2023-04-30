@@ -84,7 +84,6 @@ func (s *UserService) HashPassword(password string) (string, error) {
 
 func (s *UserService) Auth(ctx context.Context, user model.AuthUser) error {
 	userFromDB, userErr := s.repo.User.GetByEmail(ctx, user.Email)
-	s.logger.Logger(ctx).Info(userFromDB)
 	if userErr != nil {
 		s.logger.Logger(ctx).Error(userErr)
 		return userErr

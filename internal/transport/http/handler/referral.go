@@ -34,13 +34,13 @@ func (h *ReferralHandler) GetReferrals(c echo.Context) error {
 	user, err := h.service.User.GetUserFromRequest(c.Request().Context())
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	users, err := h.service.Referral.GetReferrals(c.Request().Context(), user.ID)
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return echo.NewHTTPError(http.StatusNoContent, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, users)

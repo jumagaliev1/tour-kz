@@ -39,17 +39,17 @@ func (h *UserHandler) Create(c echo.Context) error {
 	var user model.UserCreateReq
 	if err := c.Bind(&user); err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	usr, err := h.service.User.Create(c.Request().Context(), user)
 	if err != nil {
 		switch err {
 		case model.ErrDuplicateEmail:
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"message": err.Error()})
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, usr)
@@ -70,17 +70,17 @@ func (h *UserHandler) Auth(c echo.Context) error {
 
 	if err := c.Bind(&input); err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return c.JSON(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	h.logger.Logger(c.Request().Context()).Info(input.Password)
 	if err := h.service.User.Auth(c.Request().Context(), input); err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 	token, err := h.jwt.GenerateJWT(input.Email)
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, token)
@@ -100,7 +100,7 @@ func (h *UserHandler) Get(c echo.Context) error {
 	user, err := h.service.User.GetUserFromRequest(c.Request().Context())
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -120,7 +120,7 @@ func (h *UserHandler) GetAll(c echo.Context) error {
 	users, err := h.service.User.GetAll(c.Request().Context())
 	if err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, users)
