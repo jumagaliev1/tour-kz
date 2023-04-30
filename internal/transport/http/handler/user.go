@@ -39,18 +39,17 @@ func (h *UserHandler) Create(c echo.Context) error {
 	var user model.UserCreateReq
 	if err := c.Bind(&user); err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	usr, err := h.service.User.Create(c.Request().Context(), user)
-
 	if err != nil {
 		switch err {
 		case model.ErrDuplicateEmail:
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{"message": err.Error()})
 		}
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, usr)
@@ -71,7 +70,7 @@ func (h *UserHandler) Auth(c echo.Context) error {
 
 	if err := c.Bind(&input); err != nil {
 		h.logger.Logger(c.Request().Context()).Error(err)
-		return err
+		return c.JSON(http.StatusBadRequest, err)
 	}
 	h.logger.Logger(c.Request().Context()).Info(input.Password)
 	if err := h.service.User.Auth(c.Request().Context(), input); err != nil {

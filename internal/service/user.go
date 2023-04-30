@@ -33,6 +33,7 @@ func (s *UserService) Create(ctx context.Context, input model.UserCreateReq) (*m
 		s.logger.Logger(ctx).Error(err)
 		return nil, err
 	}
+
 	var parent *model.User
 	if input.ReferralCode != "" {
 		parent, err = s.repo.User.GetByReferralCode(ctx, input.ReferralCode)
@@ -52,11 +53,6 @@ func (s *UserService) Create(ctx context.Context, input model.UserCreateReq) (*m
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	_, err = s.repo.Account.Create(ctx, model.Account{UserID: u.ID})
-	if err != nil {
-		return nil, err
 	}
 
 	return u, nil
