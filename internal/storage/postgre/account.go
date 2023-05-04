@@ -41,10 +41,37 @@ func (r *AccountRepository) Update(ctx context.Context, account model.Account) e
 	return nil
 }
 
+func (r *AccountRepository) UpdateBalance(ctx context.Context, userID uint, amount int) error {
+	tx := r.DB.WithContext(ctx).Begin()
+
+	err := r.DB.WithContext(ctx).Raw(`
+			UPDATE accounts 
+				SET balance = balance + ?
+				WHERE user_id = ?`, amount, userID).Scan(&model.Account{}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	//First Level updates
+	err = r.DB.WithContext(ctx).Raw(
+		`UPDATE accounts a
+				SET balance = balance + (? * 0.15)
+				WHERE a.user_id in (SELECT u.id from users u JOIN referrals r on r.parent_id = u.id and r.user_id = ?)`, amount, userID).Scan(&model.Account{}).Error
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 func (r *AccountRepository) UpdateFirstLevel(ctx context.Context, userID uint, amount int) error {
 	err := r.DB.WithContext(ctx).Raw(
 		`UPDATE accounts a
-				SET balance = balance + (? * 0.2)
+				SET balance = balance + (? * 0.15)
 				WHERE a.user_id in (SELECT u.id from users u JOIN referrals r on r.parent_id = u.id and r.user_id = ?)`, amount, userID).Scan(&model.Account{}).Error
 
 	if err != nil {
