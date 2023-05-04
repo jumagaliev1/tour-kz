@@ -26,6 +26,7 @@ type IAccountRepository interface {
 	Create(ctx context.Context, account model.Account) (uint, error)
 	Update(ctx context.Context, account model.Account) error
 	GetByUserID(ctx context.Context, userID uint) (*model.Account, error)
+	UpdateBalance(ctx context.Context, userID uint, amount int) error
 	UpdateFirstLevel(ctx context.Context, userID uint, amount int) error
 	UpdateSecondLevel(ctx context.Context, userID uint, amount int) error
 	UpdateThirdLevel(ctx context.Context, userID uint, amount int) error

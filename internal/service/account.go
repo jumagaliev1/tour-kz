@@ -29,32 +29,5 @@ func (s *AccountService) Update(ctx context.Context, account model.Account) erro
 }
 
 func (s *AccountService) UpdateLevels(ctx context.Context, userID uint, amount int) error {
-	account, err := s.repo.Account.GetByUserID(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	account.Balance = account.Balance + amount
-
-	err = s.repo.Account.Update(ctx, *account)
-	if err != nil {
-		return err
-	}
-
-	err = s.repo.Account.UpdateFirstLevel(ctx, userID, amount)
-	if err != nil {
-		return err
-	}
-
-	err = s.repo.Account.UpdateSecondLevel(ctx, userID, amount)
-	if err != nil {
-		return err
-	}
-
-	err = s.repo.Account.UpdateThirdLevel(ctx, userID, amount)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.repo.Account.UpdateBalance(ctx, userID, amount)
 }

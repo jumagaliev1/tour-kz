@@ -30,7 +30,7 @@ func (m *Permission) AdminRequire(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if user.Role != ADMIN_ROLE {
-			return c.JSON(http.StatusForbidden, ErrAdminRequire.Error())
+			return echo.NewHTTPError(http.StatusForbidden, ErrAdminRequire.Error())
 		}
 
 		return next(c)

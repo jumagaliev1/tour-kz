@@ -37,15 +37,7 @@ func (s *ReferralService) GetReferrals(ctx context.Context, userID uint) (map[st
 	if err != nil {
 		return nil, err
 	}
-	line2, err := s.GetSecondLine(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	line3, err := s.GetThirdLine(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
 
-	return map[string][]model.User{"Line 1": line1, "Line 2": line2, "Line 3": line3}, nil
+	return map[string][]model.User{"Line 1": line1}, nil
 
 }
